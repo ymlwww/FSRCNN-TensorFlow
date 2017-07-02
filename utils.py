@@ -285,49 +285,40 @@ def test_input_setup(config):
   return nx, ny
 
 # You can ignore, I just wanted to see how much space all the parameters would take up
-def save_params(sess, weights, biases, alphas):
+def save_params(sess, weights, biases, alphas, s, d, m):
   param_dir = "params/"
 
   if not os.path.exists(param_dir):
     os.makedirs(param_dir)
 
-  weight_file = open(param_dir + "weights", 'wb')
+  h = open(param_dir + "weights{}_{}_{}.txt".format(s, d, m), 'w')
+
   for layer in weights:
+    h.write("{} =\n  [".format(layer))
     layer_weights = sess.run(weights[layer])
+    sep = False
 
     for filter_x in range(len(layer_weights)):
       for filter_y in range(len(layer_weights[filter_x])):
         filter_weights = layer_weights[filter_x][filter_y]
         for input_channel in range(len(filter_weights)):
           for output_channel in range(len(filter_weights[input_channel])):
-            weight_value = filter_weights[input_channel][output_channel]
-            # Write bytes directly to save space 
-            weight_file.write(struct.pack("f", weight_value))
-          weight_file.write(struct.pack("x"))
+            val = filter_weights[input_channel][output_channel]
+            if sep:
+                h.write(', ')
+            h.write("{}".format(val))
+            sep = True
+          h.write("\n  ")
 
-    weight_file.write("\n\n")
-  weight_file.close()
+    h.write("]\n\n")
 
-  bias_file = open(param_dir + "biases.txt", 'w')
-  for layer in biases:
-    bias_file.write("Layer {}\n".format(layer))
-    layer_biases = sess.run(biases[layer])
-    for bias in layer_biases:
-      # Can write as characters due to low bias parameter count
-      bias_file.write("{}, ".format(bias))
-    bias_file.write("\n\n")
+  for layer, tensor in biases.items() + alphas.items():
+    h.write("{} = [".format(layer))
+    vals = sess.run(tensor)
+    h.write(",".join(map(str, vals)))
+    h.write("]\n")
 
-  bias_file.close()
-
-  alpha_file = open(param_dir + "alpha.txt", 'w')
-  for layer in alphas:
-    alpha_file.write("Layer {}\n".format(layer))
-    layer_alphas = sess.run(alphas[layer])
-    for alpha in layer_alphas:
-      alpha_file.write("{}, ".format(alpha))
-    alpha_file.write("\n\n")
-
-  alpha_file.close()
+  h.close()
 
 def merge(images, size):
   """

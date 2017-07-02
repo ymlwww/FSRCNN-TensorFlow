@@ -104,7 +104,8 @@ class FSRCNN(object):
       print(" [!] Load failed...")
 
     if self.params:
-      save_params(self.sess, self.weights, self.biases, self.alphas)
+      s, d, m = self.model_params
+      save_params(self.sess, self.weights, self.biases, self.alphas, s, d, m)
     elif self.train:
       self.run_train()
     else:
