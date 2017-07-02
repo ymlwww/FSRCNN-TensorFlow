@@ -285,7 +285,7 @@ def test_input_setup(config):
   return nx, ny
 
 # You can ignore, I just wanted to see how much space all the parameters would take up
-def save_params(sess, weights, biases):
+def save_params(sess, weights, biases, alphas):
   param_dir = "params/"
 
   if not os.path.exists(param_dir):
@@ -318,6 +318,16 @@ def save_params(sess, weights, biases):
     bias_file.write("\n\n")
 
   bias_file.close()
+
+  alpha_file = open(param_dir + "alpha.txt", 'w')
+  for layer in alphas:
+    alpha_file.write("Layer {}\n".format(layer))
+    layer_alphas = sess.run(alphas[layer])
+    for alpha in layer_alphas:
+      alpha_file.write("{}, ".format(alpha))
+    alpha_file.write("\n\n")
+
+  alpha_file.close()
 
 def merge(images, size):
   """

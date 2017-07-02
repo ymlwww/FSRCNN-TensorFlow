@@ -77,6 +77,8 @@ class FSRCNN(object):
       deconv_bias: tf.Variable(tf.zeros([1]), name=deconv_bias)
     }
 
+    self.alphas = {}
+
     # Create the m mapping layers weights/biases
     for i in range(3, m + 3):
       weight_name, bias_name = 'w{}'.format(i), 'b{}'.format(i)
@@ -102,7 +104,7 @@ class FSRCNN(object):
       print(" [!] Load failed...")
 
     if self.params:
-      save_params(self.sess, self.weights, self.biases)
+      save_params(self.sess, self.weights, self.biases, self.alphas)
     elif self.train:
       self.run_train()
     else:
@@ -197,7 +199,7 @@ class FSRCNN(object):
 
     # Expanding
     expand_weights, expand_biases = self.weights['w{}'.format(m + 3)], self.biases['b{}'.format(m + 3)]
-    conv_expand = self.prelu(tf.nn.conv2d(prev_layer, expand_weights, strides=[1,1,1,1], padding='SAME') + expand_biases, 7)
+    conv_expand = self.prelu(tf.nn.conv2d(prev_layer, expand_weights, strides=[1,1,1,1], padding='SAME') + expand_biases, m + 3)
 
     # Deconvolution
     deconv_output = [self.batch, self.label_size, self.label_size, self.c_dim]
@@ -212,6 +214,7 @@ class FSRCNN(object):
     PreLU tensorflow implementation
     """
     alphas = tf.get_variable('alpha{}'.format(i), _x.get_shape()[-1], initializer=tf.constant_initializer(0.0), dtype=tf.float32)
+    self.alphas['alpha{}'.format(i)] = alphas
     pos = tf.nn.relu(_x)
     neg = alphas * (_x - abs(_x)) * 0.5
 
