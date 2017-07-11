@@ -32,8 +32,6 @@ class FSRCNN(object):
     self.scale = config.scale
     self.stride = config.stride
     self.batch_size = config.batch_size
-    self.learning_rate = config.learning_rate
-    self.momentum = config.momentum
     self.threads = config.threads
     self.params = config.params
 
@@ -96,8 +94,7 @@ class FSRCNN(object):
     self.saver = tf.train.Saver()
 
   def run(self):
-    # SGD with momentum
-    self.train_op = tf.train.MomentumOptimizer(self.learning_rate, self.momentum).minimize(self.loss)
+    self.train_op = tf.train.AdamOptimizer().minimize(self.loss)
 
     tf.initialize_all_variables().run()
 
