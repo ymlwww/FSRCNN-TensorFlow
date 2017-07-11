@@ -5,7 +5,9 @@ from utils import (
   test_input_setup,
   save_params,
   merge,
-  array_image_save
+  array_image_save,
+  tf_ssim,
+  tf_ms_ssim
 )
 
 import time
@@ -87,9 +89,10 @@ class FSRCNN(object):
 
     self.pred = self.model()
 
-    # Loss function (MSE)
-    self.loss = tf.reduce_mean(tf.reduce_sum(tf.square(self.labels - self.pred), reduction_indices=0))
-    
+    # Loss function (structural dissimilarity)
+    ssim = tf_ms_ssim(self.labels, self.pred, level=2)
+    self.loss = (1 - ssim) / 2
+
     self.saver = tf.train.Saver()
 
   def run(self):
@@ -144,8 +147,8 @@ class FSRCNN(object):
           print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f]" \
             % ((ep+1), counter, time.time() - start_time, err))
 
-        # Save every 500 steps
-        if counter % 500 == 0:
+        # Save every 200 steps
+        if counter % 200 == 0:
           self.save(self.checkpoint_dir, counter)
 
       batch_average = float(batch_average) / batch_idxs
