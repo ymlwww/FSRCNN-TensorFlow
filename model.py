@@ -32,6 +32,7 @@ class FSRCNN(object):
     self.scale = config.scale
     self.batch_size = config.batch_size
     self.threads = config.threads
+    self.distort = config.distort
     self.params = config.params
 
     # Different image/label sub-sizes for different scaling factors x2, x3, x4
