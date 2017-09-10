@@ -120,11 +120,11 @@ def modcrop(image, scale=3):
 
 def train_input_worker(args):
   image_data, config = args
-  image_size, label_size, stride, scale, distort = config
+  image_size, label_size, stride, scale, in_padding, distort = config
 
   single_input_sequence, single_label_sequence = [], []
   padding = abs(image_size - label_size) // 2 # eg. for 3x: (21 - 11) / 2 = 5
-  label_padding = abs((image_size - 4) - label_size) // 2 # eg. for 3x: (21 - (11 - 4)) / 2 = 7
+  label_padding = abs((image_size - in_padding) - label_size) // 2 # eg. for 3x: (21 - (11 - 4)) / 2 = 7
 
   input_, label_ = preprocess(image_data, scale, distort=distort)
 
@@ -165,7 +165,7 @@ def thread_train_setup(config):
   pool = Pool(config.threads)
 
   # Distribute |images_per_thread| images across each worker process
-  config_values = [config.image_size, config.label_size, config.stride, config.scale, config.distort]
+  config_values = [config.image_size, config.label_size, config.stride, config.scale, config.padding, config.distort]
   images_per_thread = len(data) // config.threads
   workers = []
   for thread in range(config.threads):
@@ -202,14 +202,14 @@ def train_input_setup(config):
   Read image files, make their sub-images, and save them as a h5 file format.
   """
   sess = config.sess
-  image_size, label_size, stride, scale = config.image_size, config.label_size, config.stride, config.scale
+  image_size, label_size, stride, scale, in_padding = config.image_size, config.label_size, config.stride, config.scale, config.padding
 
   # Load data path
   data = prepare_data(sess, dataset=config.data_dir)
 
   sub_input_sequence, sub_label_sequence = [], []
   padding = abs(image_size - label_size) // 2 # eg. for 3x: (21 - 11) / 2 = 5
-  label_padding = abs((image_size - 4) - label_size) // 2 # eg. for 3x: (21 - (11 - 4)) / 2 = 7
+  label_padding = abs((image_size - in_padding) - label_size) // 2 # eg. for 3x: (21 - (11 - 4)) / 2 = 7
 
   for i in range(len(data)):
     input_, label_ = preprocess(data[i], scale, distort=config.distort)
@@ -242,14 +242,14 @@ def test_input_setup(config):
   Read image files, make their sub-images, and save them as a h5 file format.
   """
   sess = config.sess
-  image_size, label_size, stride, scale = config.image_size, config.label_size, config.stride, config.scale
+  image_size, label_size, stride, scale, in_padding = config.image_size, config.label_size, config.stride, config.scale, config.padding
 
   # Load data path
   data = prepare_data(sess, dataset="Test")
 
   sub_input_sequence, sub_label_sequence = [], []
   padding = abs(image_size - label_size) // 2 # eg. (21 - 11) / 2 = 5
-  label_padding = abs((image_size - 4) - label_size) // 2 # eg. for 3x: (21 - (11 - 4)) / 2 = 7
+  label_padding = abs((image_size - in_padding) - label_size) // 2 # eg. for 3x: (21 - (11 - 4)) / 2 = 7
 
   pic_index = 2 # Index of image based on lexicographic order in data folder
   input_, label_ = preprocess(data[pic_index], config.scale)
