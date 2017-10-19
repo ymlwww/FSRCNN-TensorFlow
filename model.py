@@ -79,7 +79,11 @@ class Model(object):
     self.saver = tf.train.Saver()
 
   def run(self):
-    self.train_op = tf.train.AdamOptimizer(1e-4).minimize(self.loss)
+    with tf.name_scope('train'):
+        self.train_op = tf.train.AdamOptimizer(1e-4).minimize(self.loss)
+
+    self.merged = tf.summary.merge_all()
+    self.train_writer = tf.summary.FileWriter(self.model_dir + '/summary', self.sess.graph)
 
     tf.global_variables_initializer().run()
 
@@ -121,12 +125,15 @@ class Model(object):
         batch_labels = train_label[idx * self.batch_size : (idx + 1) * self.batch_size]
 
         counter += 1
-        _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels, self.batch: self.batch_size})
+        summary, _, err = self.sess.run([self.merged, self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels, self.batch: self.batch_size})
         batch_average += err
 
         if counter % 10 == 0:
           print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f]" \
             % ((ep+1), counter, time.time() - start_time, err))
+
+        if counter % 1000 == 0:
+          self.train_writer.add_summary(summary, counter)
 
         # Save every 200 steps
         if counter % 200 == 0:
@@ -138,6 +145,7 @@ class Model(object):
       elif ep >= (self.epoch * 0.8):
         end_average += batch_average
 
+    self.train_writer.close()
     # Compare loss of the first 20% and the last 20% epochs
     start_average = float(start_average) / (self.epoch * 0.2)
     end_average = float(end_average) / (self.epoch * 0.2)

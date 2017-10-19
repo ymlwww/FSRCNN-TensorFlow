@@ -12,6 +12,8 @@ TensorFlow implementation of the Fast Super-Resolution Convolutional Neural Netw
 For training: `python main.py`
 <br>
 For testing: `python main.py --train False`
+<br>
+For visualizing the summary data: `tensorboard --logdir=./checkpoint/fsrcnn_X_X-X-X_rX/summary`
 
 To use FSCRNN-s instead of FSCRNN: `python main.py --fast True`
 
