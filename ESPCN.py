@@ -1,4 +1,5 @@
 import tensorflow as tf
+from utils import tf_ms_ssim
 
 class ESPCN(object):
 
@@ -52,3 +53,7 @@ class ESPCN(object):
     neg = alphas * (_x - abs(_x)) * 0.5
 
     return pos + neg
+
+  def loss(self, Y, X):
+    ssim = tf_ms_ssim(Y, X, level=2)
+    return (1 - ssim) / 2

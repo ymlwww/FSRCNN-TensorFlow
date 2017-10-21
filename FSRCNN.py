@@ -1,4 +1,5 @@
 import tensorflow as tf
+from utils import tf_ms_ssim
 
 class FSRCNN(object):
 
@@ -70,4 +71,6 @@ class FSRCNN(object):
 
     return pos + neg
 
-
+  def loss(self, Y, X):
+    ssim = tf_ms_ssim(Y, X, level=2)
+    return (1 - ssim) / 2
