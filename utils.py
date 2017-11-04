@@ -4,11 +4,10 @@ Scipy version > 0.18 is needed, due to 'mode' option from scipy.misc.imread func
 
 import os
 import glob
-import h5py
 from math import ceil
 import subprocess
 import io
-from random import randrange
+from random import randrange, shuffle
 
 import tensorflow as tf
 from PIL import Image
@@ -18,22 +17,6 @@ from multiprocessing import Pool, Lock, active_children
 FLAGS = tf.app.flags.FLAGS
 
 downsample = True
-
-def read_data(path):
-  """
-  Read h5 format data file
-  
-  Args:
-    path: file path of desired file
-
-  Returns:
-    data: '.h5' file format that contains train data values
-    label: '.h5' file format that contains train label values
-  """
-  with h5py.File(path, 'r') as hf:
-    data = np.array(hf.get('data'))
-    label = np.array(hf.get('label'))
-    return data, label
 
 def preprocess(path, scale=3, distort=False):
   """
@@ -104,27 +87,16 @@ def prepare_data(sess, dataset):
     For train dataset, output data would be ['.../t1.bmp', '.../t2.bmp', ..., '.../t99.bmp']
   """
   if FLAGS.train:
-    filenames = os.listdir(dataset)
     data_dir = os.path.join(os.getcwd(), dataset)
+    data = []
+    for files in ('*.bmp', '*.png'):
+        data.extend(glob.glob(os.path.join(data_dir, files)))
+    shuffle(data)
   else:
     data_dir = os.path.join(os.sep, (os.path.join(os.getcwd(), dataset)), "Set5")
-  data = sorted(glob.glob(os.path.join(data_dir, "*.bmp")))
+    data = sorted(glob.glob(os.path.join(data_dir, "*.bmp")))
 
   return data
-
-def make_data(sess, checkpoint_dir, data, label):
-  """
-  Make input data as h5 file format
-  Depending on 'train' (flag value), savepath would be changed.
-  """
-  if FLAGS.train:
-    savepath = os.path.join(os.getcwd(), '{}/train.h5'.format(checkpoint_dir))
-  else:
-    savepath = os.path.join(os.getcwd(), '{}/test.h5'.format(checkpoint_dir))
-
-  with h5py.File(savepath, 'w') as hf:
-    hf.create_dataset('data', data=data)
-    hf.create_dataset('label', data=label)
 
 def modcrop(image, scale=3):
   """
@@ -224,8 +196,7 @@ def thread_train_setup(config):
   arrdata = np.asarray(sub_input_sequence)
   arrlabel = np.asarray(sub_label_sequence)
 
-  make_data(sess, config.checkpoint_dir, arrdata, arrlabel)
-
+  return (arrdata, arrlabel)
 
 def train_input_setup(config):
   """
@@ -266,8 +237,7 @@ def train_input_setup(config):
   arrdata = np.asarray(sub_input_sequence)
   arrlabel = np.asarray(sub_label_sequence)
 
-  make_data(sess, config.checkpoint_dir, arrdata, arrlabel)
-
+  return (arrdata, arrlabel)
 
 def test_input_setup(config):
   """
@@ -308,9 +278,7 @@ def test_input_setup(config):
   arrdata = np.asarray(sub_input_sequence)
   arrlabel = np.asarray(sub_label_sequence)
 
-  make_data(sess, config.checkpoint_dir, arrdata, arrlabel)
-
-  return nx, ny
+  return (arrdata, arrlabel, nx, ny)
 
 def save_params(sess, params):
   param_dir = "params/"

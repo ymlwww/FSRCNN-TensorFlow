@@ -5,7 +5,6 @@ TensorFlow implementation of the Fast Super-Resolution Convolutional Neural Netw
  * Python 3
  * TensorFlow-gpu >= 1.3
  * CUDA & cuDNN >= 6.0
- * h5py
  * Pillow
  * ImageMagick (optional)
  * Wand (optional)
@@ -22,8 +21,6 @@ Can specify epochs, learning rate, data directory, etc:
 `python main.py --epoch 100 --learning_rate 0.0002 --data_dir Train`
 <br>
 Check `main.py` for all the possible flags
-
-Also includes script `expand_data.py` which scales and rotates all the images in the specified training set to expand it
 
 ## Result
 
@@ -48,7 +45,6 @@ Super-resolved image:
 ## TODO
 
 * Add RGB support (Increase each layer depth to 3)
-* Speed up pre-processing for large datasets
 
 ## References
 
